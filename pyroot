@@ -1,0 +1,2424 @@
+
+
+#!/usr/bin/env python
+
+from ROOT import *
+import os, sys
+import itertools
+import ROOT
+import numpy as np
+import math
+from numpy.linalg import norm
+ 
+
+gROOT.SetBatch()
+#gStyle.SetOptStat(0000)
+#READ THE INPUT FILE
+if len(sys.argv) < 2 :
+    input="ttbar/outfile.root"
+else :
+    input=sys.argv[1]
+
+ifile = TFile.Open(input)
+
+##DEFINE HISTOGRAMS:
+
+#lep_top_pt
+h_lep_top_pt=TH1F("lep_top_pt","Lepton Transverse Momentum P_{t}",15,10,100)
+h_lep_top_pt.GetXaxis().SetTitle("Lepton P_{t} [GeV]")
+h_lep_top_pt.GetYaxis().SetTitle("Number of entries")
+
+#lep_top_phi
+h_lep_top_phi=TH1F("lep_top_phi","Lepton Phi",15,0.2,6.2)
+h_lep_top_phi.GetXaxis().SetTitle("Lep Phi [Rad]")
+h_lep_top_phi.GetYaxis().SetTitle("Number of entries")
+
+#lep_top_eta
+h_lep_top_eta=TH1F("lep_top_eta","Lepton Eta",15,-2.5,2.5) 
+h_lep_top_eta.GetXaxis().SetTitle("Lep Eta")
+h_lep_top_eta.GetYaxis().SetTitle("Number of entries")
+
+#lep_top_e
+h_lep_top_e=TH1F("lep_top_e","lep_top_e",15,10,260)
+#h_lep_top_e.GetYaxis().SetRangeUser(200,630)
+h_lep_top_e.GetXaxis().SetTitle("Lep Energy [Gev]")
+h_lep_top_e.GetYaxis().SetTitle("Number of entries")
+
+#invariant mass - dilepton
+h_dilepton_mass = TH1F("dilepton_mass","Dilepton Invariant Mass",15,0,200)
+h_dilepton_mass.GetXaxis().SetTitle("[]")
+h_dilepton_mass.GetYaxis().SetTitle("s")
+
+
+#invariant mass  - bjet
+h_bjet_invmass = TH1F("bjet_invmass","bjet Invariant Mass",15,0,200)
+h_bjet_invmass.GetXaxis().SetTitle("[]")
+h_bjet_invmass.GetYaxis().SetTitle("s")
+
+#inv mass - neutrino
+h_nu_invmass=TH1F("nu_invmass","Neutrinos invariant mass",15,0,200) 
+h_nu_invmass.GetXaxis().SetTitle("[]")
+h_nu_invmass.GetYaxis().SetTitle("s")
+
+#h_total_invmass
+h_total_invmass=TH1F("total_invmass","Invariant mass of the system",15,0,800) 
+h_total_invmass.GetXaxis().SetTitle("Invariant mass (GeV)")
+h_total_invmass.GetYaxis().SetTitle("Events")
+
+#diff_cos_phi
+h_diff_cos_phi=TH1F("diff_cos_phi","Difference in cos phi of the dilepton",15,-1,1) 
+h_diff_cos_phi.GetXaxis().SetTitle("cos phi")
+h_diff_cos_phi.GetYaxis().SetTitle("Events")
+
+#h_top_invmass
+h_top_invmass=TH1F("top_invmass","Invariant mass of the top",15,0,400) 
+h_top_invmass.GetXaxis().SetTitle("Invariant mass (GeV)")
+h_top_invmass.GetYaxis().SetTitle("Events")
+
+#h_top_invmass
+h_antitop_invmass=TH1F("antitop_invmass","Invariant mass of the anti-top",15,0,400) 
+h_antitop_invmass.GetXaxis().SetTitle("Invariant mass (GeV)")
+h_antitop_invmass.GetYaxis().SetTitle("Events")
+
+#h_top_antitopinvmass
+h_top_antitop_invmass=TH1F("top_antitop_invmass","Invariant mass of the top and anti-top",15,0,400) 
+h_top_antitop_invmass.GetXaxis().SetTitle("Invariant mass (GeV)")
+h_top_antitop_invmass.GetYaxis().SetTitle("Events")
+
+#diff_cos_phi
+h_cos_phi=TH1F("cos_phi"," cos phi of the dilepton",15,-1,1) 
+h_cos_phi.GetXaxis().SetTitle("cos phi")
+h_cos_phi.GetYaxis().SetTitle("Events")
+
+#diff_cos_phi_450
+h_cos_phi_450=TH1F("cos_phi_450"," cos phi of the dilepton for s < 450",15,-1,1) 
+h_cos_phi_450.GetXaxis().SetTitle("cos phi")
+h_cos_phi_450.GetYaxis().SetTitle("Events")
+
+#diff_cos_phi_550
+h_cos_phi_550=TH1F("cos_phi_550"," cos phi of the dilepton for 450< s < 550",15,-1,1) 
+h_cos_phi_550.GetXaxis().SetTitle("cos phi")
+h_cos_phi_550.GetYaxis().SetTitle("Events")
+
+#diff_cos_phi_above550
+h_cos_phi_above550=TH1F("cos_phi_above550"," cos phi of the dilepton for s > 550",15,-1,1) 
+h_cos_phi_above550.GetXaxis().SetTitle("cos phi")
+h_cos_phi_above550.GetYaxis().SetTitle("Events")
+
+#extrajets
+h_jet1=TH1F("jet1"," cos phi of the dilepton",15,-1,1)
+h_jet2=TH1F("jet2"," cos phi of the dilepton",15,-1,1)
+h_jet3=TH1F("jet3"," cos phi of the dilepton",15,-1,1)
+
+#D-mass for jet < 3 
+#extrajets
+h_cos_phi_450_3jet=TH1F("cos_phi_450_3jet"," cos phi of the dilepton",15,-1,1)
+h_cos_phi_550_3jet=TH1F("cos_phi_550_3jet"," cos phi of the dilepton",15,-1,1)
+h_cos_phi_above550_3jet=TH1F("cos_phi_above550_3jet"," cos phi of the dilepton",15,-1,1)
+
+#Xf
+h_X_f=TH1F("X_f"," X_f",15,0,1) 
+h_X_f.GetXaxis().SetTitle("")
+h_X_f.GetYaxis().SetTitle("Events")
+
+#cos_theta
+h_cos_theta=TH1F("cos_theta","Cos theta of the top",15,-1,1) 
+h_cos_theta.GetXaxis().SetTitle("cos Theta")
+h_cos_theta.GetYaxis().SetTitle("Events")
+
+#Xf  versus D
+h_X_f_03=TH1F("X_f_03"," X_f",15,-1,1) 
+h_X_f_1=TH1F("X_f_1"," X_f",15,-1,1) 
+h_X_f_above1=TH1F("X_f_above1"," X_f",15,-1,1) 
+
+#d and inv mass without cuts
+h_d_400 = TH1F("d_400"," d_400",15,-1,1) 
+h_d_450 = TH1F("d_450"," d_450",15,-1,1) 
+h_d_500 = TH1F("d_500"," d_500",15,-1,1) 
+h_d_550 = TH1F("d_550"," d_550",15,-1,1) 
+h_d_600 = TH1F("d_600"," d_600",15,-1,1) 
+h_d_650 = TH1F("d_650"," d_650",15,-1,1) 
+h_d_700 = TH1F("d_700"," d_700",15,-1,1)
+h_d_750 = TH1F("d_750"," d_750",15,-1,1) 
+h_d_800 = TH1F("d_800"," d_800",15,-1,1) 
+h_d_850 = TH1F("d_850"," d_850",15,-1,1) 
+h_d_900 = TH1F("d_900"," d_900",15,-1,1) 
+h_d_950 = TH1F("d_950"," d_950",15,-1,1) 
+h_d_1000 = TH1F("d_1000"," d_1000",15,-1,1) 
+
+#d and inv mass with all cuts
+h_d_400_1 = TH1F("d_400_1"," d_400",15,-1,1) 
+h_d_450_1 = TH1F("d_450_1"," d_450",15,-1,1) 
+h_d_500_1 = TH1F("d_500_1"," d_500",15,-1,1) 
+h_d_550_1 = TH1F("d_550_1"," d_550",15,-1,1) 
+h_d_600_1 = TH1F("d_600_1"," d_600",15,-1,1) 
+h_d_650_1 = TH1F("d_650_1"," d_650",15,-1,1) 
+h_d_700_1 = TH1F("d_700_1"," d_700",15,-1,1) 
+h_d_750_1 = TH1F("d_750_1"," d_750",15,-1,1) 
+h_d_800_1 = TH1F("d_800_1"," d_800",15,-1,1) 
+h_d_850_1 = TH1F("d_850_1"," d_850",15,-1,1) 
+h_d_900_1 = TH1F("d_900_1"," d_900",15,-1,1)
+h_d_950_1 = TH1F("d_950_1"," d_950",15,-1,1)  
+h_d_1000_1 = TH1F("d_1000_1"," d_1000",15,-1,1) 
+
+#d and inv mass with cut in jets
+h_d_400_2 = TH1F("d_400_2"," d_400",15,-1,1)
+h_d_450_2 = TH1F("d_450_2"," d_450",15,-1,1) 
+h_d_500_2 = TH1F("d_500_2"," d_500",15,-1,1) 
+h_d_550_2 = TH1F("d_550_2"," d_550",15,-1,1) 
+h_d_600_2 = TH1F("d_600_2"," d_600",15,-1,1)
+h_d_650_2 = TH1F("d_650_2"," d_650",15,-1,1) 
+h_d_700_2 = TH1F("d_700_2"," d_700",15,-1,1)
+h_d_750_2 = TH1F("d_750_2"," d_750",15,-1,1) 
+h_d_800_2 = TH1F("d_800_2"," d_800",15,-1,1) 
+h_d_850_2 = TH1F("d_850_2"," d_850",15,-1,1) 
+h_d_900_2 = TH1F("d_900_2"," d_900",15,-1,1) 
+h_d_950_2 = TH1F("d_950_2"," d_950",15,-1,1) 
+h_d_1000_2 = TH1F("d_1000_2"," d_1000",15,-1,1) 
+
+#d and inv mass with cut in Xf
+h_d_400_3 = TH1F("d_400_3"," d_400",15,-1,1) 
+h_d_450_3 = TH1F("d_450_3"," d_450",15,-1,1) 
+
+h_d_500_3 = TH1F("d_500_3"," d_500",15,-1,1) 
+h_d_550_3 = TH1F("d_550_3"," d_550",15,-1,1) 
+
+h_d_600_3 = TH1F("d_600_3"," d_600",15,-1,1) 
+h_d_650_3 = TH1F("d_650_3"," d_650",15,-1,1) 
+
+h_d_700_3 = TH1F("d_700_3"," d_700",15,-1,1) 
+h_d_750_3 = TH1F("d_750_3"," d_750",15,-1,1) 
+
+h_d_800_3 = TH1F("d_800_3"," d_800",15,-1,1)
+h_d_850_3 = TH1F("d_850_3"," d_850",15,-1,1) 
+ 
+h_d_900_3 = TH1F("d_900_3"," d_900",15,-1,1) 
+h_d_950_3 = TH1F("d_950_3"," d_950",15,-1,1) 
+
+h_d_1000_3 = TH1F("d_1000_3"," d_1000",15,-1,1) 
+
+#d with cos theta
+
+h_d_400_4 = TH1F("d_400_4"," d_400",15,-1,1)
+h_d_450_4 = TH1F("d_450_4"," d_450",15,-1,1) 
+ 
+h_d_500_4 = TH1F("d_500_4"," d_500",15,-1,1) 
+h_d_550_4 = TH1F("d_550_4"," d_550",15,-1,1) 
+
+h_d_600_4 = TH1F("d_600_4"," d_600",15,-1,1)
+h_d_650_4 = TH1F("d_650_4"," d_650",15,-1,1) 
+
+ 
+h_d_700_4 = TH1F("d_700_4"," d_700",15,-1,1)
+h_d_750_4 = TH1F("d_750_4"," d_750",15,-1,1) 
+ 
+h_d_800_4 = TH1F("d_800_4"," d_800",15,-1,1) 
+h_d_850_4 = TH1F("d_850_4"," d_850",15,-1,1) 
+
+h_d_900_4 = TH1F("d_900_4"," d_900",15,-1,1) 
+h_d_950_4 = TH1F("d_950_4"," d_950",15,-1,1) 
+
+h_d_1000_4 = TH1F("d_1000_4"," d_1000",15,-1,1) 
+
+
+
+
+
+
+#print 'Tree contents:'
+#ifile.particleLevel.Show(1)
+
+
+#LOOP ON EVENTS IN THE TREE STORED IN THE FILE :
+
+
+for event in ifile.particleLevel :
+    top_lep_pt = event.top_lep_pt
+    top_lep_e = event.top_lep_e
+    top_lep_phi = event.top_lep_phi
+    top_lep_eta = event.top_lep_eta
+
+    #Bjets
+    top_bjet_pt = event.top_bjet_pt
+    top_bjet_e = event.top_bjet_e
+    top_bjet_phi = event.top_bjet_phi
+    top_bjet_eta = event.top_bjet_eta
+
+    #Neutrinos
+    top_nu_pt = event.top_nu_pt
+    top_nu_phi = event.top_nu_phi
+    top_nu_eta = event.top_nu_eta
+    top_nu_m = event.top_nu_pt
+
+    jet_n = event.jet_n
+    
+
+    
+
+    leptons = []
+    for i,lep_pt in enumerate(top_lep_pt) :
+        #STORE INFO AS 4-VECTORS
+        lepton=TLorentzVector() #Nice ROOT class, good to store particles
+        lepton.SetPtEtaPhiE(lep_pt,top_lep_eta[i],top_lep_phi[i],top_lep_e[i])
+        leptons.append(lepton)
+       
+
+        #FILL HISTOGRAMS
+        h_lep_top_pt.Fill(lepton.Pt())
+        h_lep_top_eta.Fill(lepton.Eta())
+        h_lep_top_phi.Fill(lepton.Phi())
+        h_lep_top_e.Fill(lepton.E())
+
+
+    B_jet = []
+    for i,bjet_pt in enumerate(top_bjet_pt):
+        bjet=TLorentzVector()
+        bjet.SetPtEtaPhiE(bjet_pt,top_bjet_eta[i],top_bjet_phi[i],top_bjet_e[i])
+        B_jet.append(bjet)
+        
+    neutrino = []
+    for i,nu_pt in enumerate(top_nu_pt):
+        nu=TLorentzVector()
+        nu.SetPtEtaPhiM(nu_pt,top_nu_eta[i],top_nu_phi[i],0.0)
+        neutrino.append(nu)
+
+
+#Invariant mass of dilepton
+    dilepton = np.add(leptons[0],leptons[1])
+    dileptonMass =  dilepton.M()
+    
+    leptonmass = leptons[0].M()
+
+#Invariant mass of bjet
+
+    bjets = np.add(B_jet[0],B_jet[1])
+    bjet_s =  bjets.M()
+
+#Invariant mass of neutrinos
+
+    neutrinos  = np.add(neutrino[0],neutrino[1])
+    neutrinos_s  =  neutrinos.M()
+    
+    h_bjet_invmass.Fill(bjet_s)
+    h_dilepton_mass.Fill(dileptonMass)
+    h_nu_invmass.Fill(neutrinos_s)
+
+#Invariant mass of the whole system 
+    
+    invariant_mass = dilepton + bjets + neutrinos
+    invariant_mass1 = invariant_mass.M()
+    h_total_invmass.Fill(invariant_mass1)
+   
+
+#Diffrence in Cos phi of the two leptons
+
+    diff_phi = np.subtract(top_lep_phi[0] , top_lep_phi[1])
+    diff_cos_phi = np.cos(diff_phi)
+    h_diff_cos_phi.Fill(diff_cos_phi)
+
+# Constructing top
+
+   # tops  =  []
+    
+    top_improved = 0
+    antitop_improved = 0
+    top_4vec = 0
+    antitop_4vec = 0
+    lep_top_index  = -1
+    lep_antitop_index = -1
+
+    top_4vec=TLorentzVector()
+    top_lab=TLorentzVector()
+
+    antitop_4vec=TLorentzVector()
+    antitop_lab=TLorentzVector()
+
+    
+    min = 10000
+    for l in range(0,len(leptons)) :
+        for n in range(0,len(neutrino)) :
+            for m in range(0,len(B_jet)):
+                #for b in range(0,len(jet_n)):
+                
+                top_1 =leptons[l] +  neutrino[n] +B_jet[m]
+                
+                top1_invmass = top_1.M()
+               # print "lepton %i neutrino %i Bjet %i mass %d  "%(l,n,m,top1_invmass)
+
+                
+                    
+                
+    
+            if  abs(top1_invmass - 172.5) <= min :
+                        
+                min = abs(top1_invmass - 172.5)
+                top_improved = top1_invmass
+                
+                top_4vec.SetPtEtaPhiM(top_1.Pt(),top_1.Eta(),top_1.Phi(),top_1.M())
+                top_lab.SetPtEtaPhiM(top_1.Pt(),top_1.Eta(),top_1.Phi(),top_1.M())
+
+                lep_top_index  = l 
+
+                other_l = 0 if l == 1 else 1
+                other_n = 0 if n == 1 else 1
+                other_m = 0 if m == 1 else 1
+                antitop_1=leptons[other_l] + neutrino[other_n] +B_jet[other_m]
+                antitop_invmass = antitop_1.M()
+                        
+                antitop_improved = antitop_invmass
+
+                
+                antitop_4vec.SetPtEtaPhiM(antitop_1.Pt(),antitop_1.Eta(),antitop_1.Phi(),antitop_1.M())
+                lep_antitop_index = other_l
+                
+                antitop_lab.SetPtEtaPhiM(antitop_1.Pt(),antitop_1.Eta(),antitop_1.Phi(),antitop_1.M())
+                
+                
+                    
+                    
+                        
+    h_antitop_invmass.Fill(antitop_improved)
+
+ #to find cos theta*
+   # print(top_lab.P())
+    ttbarsys = top_lab + antitop_lab
+    a3 = -1 * ttbarsys.BoostVector() #Returns the spatial components divided by the time component.
+    ttbarsys.Boost(a3) #Lorentz boost
+    #print(ttbarsys.P())
+
+    #Cos theta - Production angle of the top . angle, in ttbar COM frame  between p and z axis) in COM frame
+    
+    top_lab.Boost(a3)
+    P = top_lab.P()
+    #P_z = np.sqrt( P**2-(top_lab.Pt())**2 )
+    P_z = top_lab.Pz()
+    cos_theta_1 = P_z / P if (P > 0.0001 ) else 0.0
+   # print(P)
+    h_cos_theta.Fill(cos_theta_1)
+    
+    #print "before boost ",(top_lab.P())
+    
+    
+    #Boost
+
+   
+   # print("Pt before boost",top_4vec.Pt())
+    a1 = -1 * top_4vec.BoostVector()
+    top_4vec.Boost(a1)
+
+    #print(top_1.P())
+
+   # print("Pt of anti top before boost",antitop_4vec.Pt())
+    a2 = -1 * antitop_4vec.BoostVector()
+    antitop_4vec.Boost(a2)
+
+    #print(antitop_4vec.Pt())
+
+    leptons[lep_top_index].Boost(a1)
+    leptons[lep_antitop_index].Boost(a2)
+
+   
+    
+
+    #Diffrence in Cos phi of the two leptons - with the improved tops
+
+    threevec_a =  leptons[lep_top_index].Vect()
+    threevec_b = leptons[lep_antitop_index].Vect()
+
+    cos_phi_angle = threevec_a.Dot(threevec_b)/(threevec_a.Mag()*threevec_b.Mag())
+    h_cos_phi.Fill(cos_phi_angle)
+
+
+    
+    
+   
+    
+    if  invariant_mass1 < 450 :
+        h_cos_phi_450.Fill(cos_phi_angle)
+
+    if 450 <=   invariant_mass1 <=550:
+        h_cos_phi_550.Fill(cos_phi_angle)
+
+    if  invariant_mass1 > 550 :
+        h_cos_phi_above550.Fill(cos_phi_angle)
+
+
+    #jet
+    
+    top_jet = jet_n 
+   # print(top_jet)
+    
+    if top_jet == 2:
+        h_jet1.Fill(cos_phi_angle)
+       
+    if top_jet == 3:
+         h_jet2.Fill(cos_phi_angle)
+        
+    if top_jet > 3 :
+         h_jet3.Fill(cos_phi_angle)
+
+
+    # D-Mass for jet < 3 
+
+    invmass_jet = 0
+    if top_jet <= 3 :
+        invmass_jet = invariant_mass1
+        #print(invmass_jet)
+        events_3jet = invariant_mass1
+       # print(events_3jet)
+        
+        if events_3jet < 450 :
+            h_cos_phi_450_3jet.Fill(cos_phi_angle)
+        #print(events_3jet)
+        
+        elif 450 <=   events_3jet  <=550 :
+            h_cos_phi_550_3jet.Fill(cos_phi_angle)
+
+        elif events_3jet > 550 :
+            h_cos_phi_above550_3jet.Fill(cos_phi_angle)
+
+
+#Xf is the ratio of 2 times longitudinal angular momentum of the ttbar system in lab frame over the COM energy which is 13 TeV (GeV) 
+    
+
+    P =  invariant_mass.P()
+    Pt = invariant_mass.Pt()
+    Pl =  np.sqrt (P**2 - Pt**2)
+    
+    
+    Xf = 2 * Pl / (13* 1000)
+    h_X_f.Fill(Xf)
+
+    invmass_xf = []
+    if Xf < 0.03 :
+        invmass_xf.append(invariant_mass1)
+       # print(invmass_xf)
+        h_X_f_03.Fill(cos_phi_angle)
+        
+    if 0.03 <= Xf <= 0.1 :
+        h_X_f_1.Fill(cos_phi_angle)
+
+    if  Xf > 0.1 :
+        h_X_f_above1.Fill(cos_phi_angle)
+
+#D versus invariant mass graph without cuts 
+
+
+
+    if  invariant_mass1 < 400 :
+        h_d_400.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 450 :
+        h_d_450.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 500 :
+        h_d_500.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 550 :
+        h_d_550.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 600 :
+        h_d_600.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 650 :
+        h_d_650.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 700 :
+        h_d_700.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 750 :
+        h_d_750.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 800 :
+        h_d_800.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 850 :
+        h_d_850.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 900 :
+        h_d_900.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 950 :
+        h_d_950.Fill(cos_phi_angle)
+
+    if  invariant_mass1 < 1000 :
+        h_d_1000.Fill(cos_phi_angle)
+
+#D versus invariant mass graph with cuts on jets and Xf
+
+    if top_jet <= 3 :
+       if Xf < 0.03 :
+           #  if cos_theta_1 >= np.abs( -0.6 ) :
+           if any([ cos_theta_1 <= -0.6,  cos_theta_1 >= 0.6]) :
+              # print(invariant_mass1)
+               print(cos_theta_1)
+
+
+    
+    if top_jet <= 3 :
+        if Xf < 0.03 :
+             if any([ cos_theta_1 <= -0.8,  cos_theta_1 >= 0.8]) : 
+             #cos_theta_1 <= -0.6 or 0.6<= cos_theta_1 >= 1.0 :
+                  # if 0.6<= cos_theta_1 <= 0.1 :
+               # print(invariant_mass1)
+                 
+                 
+                if  invariant_mass1 < 400 :
+                    h_d_400_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 450 :
+                    h_d_450_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 500 :
+                    h_d_500_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 550 :
+                    h_d_550_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 600 :
+                    h_d_600_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 650 :
+                    h_d_650_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 700 :
+                    h_d_700_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 750 :
+                    h_d_750_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 800 :
+                    h_d_800_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 850 :
+                    h_d_850_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 900 :
+               
+                    h_d_900_1.Fill(cos_phi_angle)
+
+                if  invariant_mass1 < 950 :
+                    h_d_950_1.Fill(cos_phi_angle)
+
+
+                if  invariant_mass1 < 1000 :
+                    h_d_1000_1.Fill(cos_phi_angle)
+
+#D versus invariant mass graph with cuts on xf
+
+
+    
+    if Xf < 0.03 :
+            
+        if  invariant_mass1 < 400 :
+            h_d_400_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 450 :
+            h_d_450_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 500 :
+            h_d_500_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 550 :
+            h_d_550_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 600 :
+            h_d_600_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 650 :
+            h_d_650_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 700 :
+            h_d_700_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 750 :
+            h_d_750_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 800 :
+            h_d_800_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 850 :
+            h_d_850_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 900 :
+            h_d_900_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 950 :
+            h_d_950_2.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 1000 :
+            h_d_1000_2.Fill(cos_phi_angle)
+
+#D versus invariant mass graph with cuts on jets
+
+
+    
+    if top_jet <= 3 :
+            
+        if  invariant_mass1 < 400 :
+            h_d_400_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 450 :
+            h_d_450_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 500 :
+            h_d_500_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 550 :
+            h_d_550_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 600 :
+            h_d_600_3.Fill(cos_phi_angle)
+                
+        if  invariant_mass1 < 650 :
+            h_d_650_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 700 :
+            h_d_700_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 750 :
+            h_d_750_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 800 :
+            h_d_800_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 850 :
+            h_d_850_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 900 :
+            h_d_900_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 950 :
+            h_d_950_3.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 1000 :
+            h_d_1000_3.Fill(cos_phi_angle)
+
+
+
+
+
+#D versus mass with cuts in cos theta
+
+    if np.abs( cos_theta_1) >=  0.6 :
+       # elif cos_theta_1 >= 0.6 :
+            
+        if  invariant_mass1 < 400 :
+            h_d_400_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 450 :
+            h_d_450_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 500 :
+            h_d_500_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 550 :
+            h_d_550_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 600 :
+            h_d_600_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 650 :
+            h_d_650_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 700 :
+            h_d_700_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 750 :
+            h_d_750_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 800 :
+            h_d_800_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 850 :
+            h_d_850_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 900 :
+            h_d_900_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 950 :
+            h_d_950_4.Fill(cos_phi_angle)
+
+        if  invariant_mass1 < 1000 :
+            h_d_1000_4.Fill(cos_phi_angle)
+        
+        
+
+
+a_X_f = 1 /h_X_f.Integral() #normalising the  histogram with 
+norm = h_X_f.Scale(a_X_f)#diving by width of the histogram to get probability density
+#h_X_f.Scale(a_X_f)
+
+#f1_Xf = TF1("f1_Xf" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#Xf <0.03
+
+a_X_f_03 = 1 /X_f_03.Integral() #normalising the  histogram with 
+norm = h_X_f_03.Scale(a_X_f_03)#diving by width of the histogram to get probability density
+h_X_f_03.Scale(15./2.)
+
+f1_X_f_03 = TF1("f1_X_f_03" , "0.5 * (-1 * [0] * x + [1])" , 0 , 0.005)
+
+#Xf = 0.1
+
+a_X_f_1 = 1 /X_f_1.Integral() #normalising the  histogram with 
+norm = h_X_f_1.Scale(a_X_f_1)#diving by width of the histogram to get probability density
+h_X_f_1.Scale(15./2.)
+
+f1_X_f_1 = TF1("f1_X_f_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+
+#Xf above 0.2
+
+a_X_f_above1 = 1 /X_f_above1.Integral() #normalising the  histogram with 
+norm = h_X_f_above1.Scale(a_X_f_above1)#diving by width of the histogram to get probability density
+#h_X_f_above1.Scale(a_X_f_above02)
+h_X_f_above1.Scale(15./2.)
+
+f1_X_f_above1 = TF1("f1_X_f_above1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+
+    
+
+#jet = 1
+
+        
+a_jet1 = 1 /jet1.Integral() #normalising the  histogram with 
+norm = h_jet1.Scale(a_jet1)#diving by width of the histogram to get probability density
+h_jet1.Scale(15./2.)
+
+f1_jet1 = TF1("f1_jet1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+              
+#jet = 2
+
+        
+a_jet2 = 1 /jet2.Integral() #normalising the  histogram with 
+norm = h_jet2.Scale(a_jet2)#diving by width of the histogram to get probability density
+h_jet2.Scale(15./2.)
+
+f1_jet2 = TF1("f1_jet2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+              
+#jet = 3
+
+        
+a_jet3 = 1 /jet3.Integral() #normalising the  histogram with 
+norm = h_jet3.Scale(a_jet3)#diving by width of the histogram to get probability density
+h_jet3.Scale(15./2.)
+
+f1_jet3 = TF1("f1_jet3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+
+    
+a = 1 /h_cos_phi.Integral() #normalising the  histogram with 
+norm = h_cos_phi.Scale(a)#diving by width of the histogram to get probability density
+h_cos_phi.Scale(15./2.)
+#print(h_cos_phi.Integral())
+
+f1 = TF1("f1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+
+#for s <450
+
+a_450 = 1 /h_cos_phi_450.Integral() #normalising the  histogram with 
+norm = h_cos_phi_450.Scale(a_450)#diving by width of the histogram to get probability density
+h_cos_phi_450.Scale(15./2.)
+
+f1_450 = TF1("f1_450" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#for s <550
+
+a_550 = 1 /h_cos_phi_550.Integral() #normalising the  histogram with 
+norm = h_cos_phi_550.Scale(a_550)#diving by width of the histogram to get probability density
+h_cos_phi_550.Scale(15./2.)
+
+f1_550 = TF1("f1_550" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#for s <550
+
+a_above550 = 1 /h_cos_phi_above550.Integral() #normalising the  histogram with 
+norm = h_cos_phi_above550.Scale(a_above550)#diving by width of the histogram to get probability density
+h_cos_phi_above550.Scale(15./2.)
+
+f1_above550 = TF1("f1_above550" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#for s <450 3 jet
+
+a_450_3jet = 1 /h_cos_phi_450_3jet.Integral() #normalising the  histogram with 
+norm = h_cos_phi_450_3jet.Scale(a_450_3jet)#diving by width of the histogram to get probability density
+h_cos_phi_450_3jet.Scale(15./2.)
+
+f1_450_3jet = TF1("f1_450_3jet" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#for s <550 3 jet
+
+a_550_3jet = 1 /h_cos_phi_550_3jet.Integral() #normalising the  histogram with 
+norm = h_cos_phi_550_3jet.Scale(a_550_3jet)#diving by width of the histogram to get probability density
+h_cos_phi_550_3jet.Scale(15./2.)
+
+f1_550_3jet = TF1("f1_550_3jet" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#for s <550 3 jet
+
+a_above550_3jet = 1 /h_cos_phi_above550_3jet.Integral() #normalising the  histogram with 
+norm = h_cos_phi_above550_3jet.Scale(a_above550_3jet)#diving by width of the histogram to get probability density
+h_cos_phi_above550_3jet.Scale(15./2.)
+
+f1_above550_3jet = TF1("f1_above550_3jet" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+
+#d versus invariant mass fit (without cuts )
+
+a_400 = 1 /h_d_400.Integral()
+norm = h_d_400.Scale(a_400)
+h_d_400.Scale(15./2.)
+
+f1_400 = TF1("f1_400" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_450 = 1 /h_d_450.Integral()
+norm = h_d_450.Scale(a_450)
+h_d_450.Scale(15./2.)
+
+f1_450 = TF1("f1_450" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_500 = 1 /h_d_500.Integral()
+norm = h_d_500.Scale(a_500)
+h_d_500.Scale(15./2.)
+
+f1_500 = TF1("f1_500" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_550 = 1 /h_d_550.Integral()
+norm = h_d_550.Scale(a_550)
+h_d_550.Scale(15./2.)
+
+f1_550 = TF1("f1_550" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_600 = 1 /h_d_600.Integral()
+norm = h_d_600.Scale(a_600)
+h_d_600.Scale(15./2.)
+
+f1_600 = TF1("f1_600" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_650 = 1 /h_d_650.Integral()
+norm = h_d_650.Scale(a_650)
+h_d_650.Scale(15./2.)
+
+f1_650 = TF1("f1_650" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_700 = 1 /h_d_700.Integral()
+norm = h_d_700.Scale(a_700)
+h_d_700.Scale(15./2.)
+
+f1_700 = TF1("f1_700" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_750 = 1 /h_d_750.Integral()
+norm = h_d_750.Scale(a_750)
+h_d_750.Scale(15./2.)
+
+f1_750 = TF1("f1_750" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_800 = 1 /h_d_800.Integral()
+norm = h_d_800.Scale(a_800)
+h_d_800.Scale(15./2.)
+
+f1_800 = TF1("f1_800" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_850 = 1 /h_d_850.Integral()
+norm = h_d_850.Scale(a_850)
+h_d_850.Scale(15./2.)
+
+f1_850 = TF1("f1_850" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_900 = 1 /h_d_900.Integral()
+norm = h_d_900.Scale(a_900)
+h_d_900.Scale(15./2.)
+
+f1_900 = TF1("f1_900" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_950 = 1 /h_d_950.Integral()
+norm = h_d_950.Scale(a_950)
+h_d_950.Scale(15./2.)
+
+f1_950 = TF1("f1_950" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_1000 = 1 /h_d_1000.Integral()
+norm = h_d_1000.Scale(a_1000)
+h_d_1000.Scale(15./2.)
+
+f1_1000 = TF1("f1_1000" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#d versus invariant mass fit (with cuts )
+
+a_400_1 = 1 /h_d_400_1.Integral()
+norm = h_d_400_1.Scale(a_400_1)
+h_d_400_1.Scale(15./2.)
+
+f1_400_1 = TF1("f1_400_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_450_1 = 1 /h_d_450_1.Integral()
+norm = h_d_450_1.Scale(a_450_1)
+h_d_450_1.Scale(15./2.)
+
+f1_450_1 = TF1("f1_450_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_500_1 = 1 /h_d_500_1.Integral()
+norm = h_d_500_1.Scale(a_500_1)
+h_d_500_1.Scale(15./2.)
+
+f1_500_1 = TF1("f1_500_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_550_1 = 1 /h_d_550_1.Integral()
+norm = h_d_550_1.Scale(a_550_1)
+h_d_550_1.Scale(15./2.)
+
+f1_550_1 = TF1("f1_550_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+
+a_600_1 = 1 /h_d_600_1.Integral()
+norm = h_d_600_1.Scale(a_600_1)
+h_d_600_1.Scale(15./2.)
+
+f1_600_1 = TF1("f1_600_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_650_1 = 1 /h_d_650_1.Integral()
+norm = h_d_650_1.Scale(a_650_1)
+h_d_650_1.Scale(15./2.)
+
+f1_650_1 = TF1("f1_650_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_700_1 = 1 /h_d_700_1.Integral()
+norm = h_d_700_1.Scale(a_700_1)
+h_d_700_1.Scale(15./2.)
+
+f1_700_1 = TF1("f1_700_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_750_1 = 1 /h_d_750_1.Integral()
+norm = h_d_750_1.Scale(a_750_1)
+h_d_750_1.Scale(15./2.)
+
+f1_750_1 = TF1("f1_750_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_800_1 = 1 /h_d_800_1.Integral()
+norm = h_d_800_1.Scale(a_800_1)
+h_d_800_1.Scale(15./2.)
+
+f1_800_1 = TF1("f1_800_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_850_1 = 1 /h_d_850_1.Integral()
+norm = h_d_850_1.Scale(a_850_1)
+h_d_850_1.Scale(15./2.)
+
+f1_850_1 = TF1("f1_850_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_900_1 = 1 /h_d_900_1.Integral()
+norm = h_d_900_1.Scale(a_900_1)
+h_d_900_1.Scale(15./2.)
+
+f1_900_1 = TF1("f1_900_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_950_1 = 1 /h_d_950_1.Integral()
+norm = h_d_950_1.Scale(a_950_1)
+h_d_950_1.Scale(15./2.)
+
+f1_950_1 = TF1("f1_950_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_1000_1 = 1 /h_d_1000_1.Integral()
+norm = h_d_1000_1.Scale(a_1000_1)
+h_d_1000_1.Scale(15./2.)
+
+f1_1000_1 = TF1("f1_1000_1" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+# with cuts in Xf
+
+a_400_2 = 1 /h_d_400_2.Integral()
+norm = h_d_400_2.Scale(a_400_2)
+h_d_400_2.Scale(15./2.)
+
+f1_400_2 = TF1("f1_400_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_450_2 = 1 /h_d_450_2.Integral()
+norm = h_d_450_2.Scale(a_450_2)
+h_d_450_2.Scale(15./2.)
+
+f1_450_2 = TF1("f1_450_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_500_2 = 1 /h_d_500_2.Integral()
+norm = h_d_500_2.Scale(a_500_2)
+h_d_500_2.Scale(15./2.)
+
+f1_500_2 = TF1("f1_500_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_550_2 = 1 /h_d_550_2.Integral()
+norm = h_d_550_2.Scale(a_550_2)
+h_d_550_2.Scale(15./2.)
+
+f1_550_2 = TF1("f1_550_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_600_2 = 1 /h_d_600_2.Integral()
+norm = h_d_600_2.Scale(a_600_2)
+h_d_600_2.Scale(15./2.)
+
+f1_600_2 = TF1("f1_600_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_650_2 = 1 /h_d_650_2.Integral()
+norm = h_d_650_2.Scale(a_650_2)
+h_d_650_2.Scale(15./2.)
+
+f1_650_2 = TF1("f1_650_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_700_2 = 1 /h_d_700_2.Integral()
+norm = h_d_700_2.Scale(a_700_2)
+h_d_700_2.Scale(15./2.)
+
+f1_700_2 = TF1("f1_700_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_750_2 = 1 /h_d_750_2.Integral()
+norm = h_d_750_2.Scale(a_750_2)
+h_d_750_2.Scale(15./2.)
+
+f1_750_2 = TF1("f1_750_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_800_2 = 1 /h_d_800_2.Integral()
+norm = h_d_800_2.Scale(a_800_2)
+h_d_800_2.Scale(15./2.)
+
+f1_800_2 = TF1("f1_800_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_850_2 = 1 /h_d_850_2.Integral()
+norm = h_d_850_2.Scale(a_850_2)
+h_d_850_2.Scale(15./2.)
+
+f1_850_2 = TF1("f1_850_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_900_2 = 1 /h_d_900_2.Integral()
+norm = h_d_900_2.Scale(a_900_2)
+h_d_900_2.Scale(15./2.)
+
+f1_900_2 = TF1("f1_900_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_950_2 = 1 /h_d_950_2.Integral()
+norm = h_d_950_2.Scale(a_950_2)
+h_d_950_2.Scale(15./2.)
+
+f1_950_2 = TF1("f1_950_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_1000_2 = 1 /h_d_1000_2.Integral()
+norm = h_d_1000_2.Scale(a_1000_2)
+h_d_1000_2.Scale(15./2.)
+
+f1_1000_2 = TF1("f1_1000_2" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#cuts in jets 
+
+a_400_3 = 1 /h_d_400_3.Integral()
+norm = h_d_400_3.Scale(a_400_3)
+h_d_400_3.Scale(15./2.)
+
+f1_400_3 = TF1("f1_400_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_450_3 = 1 /h_d_450_3.Integral()
+norm = h_d_450_3.Scale(a_450_3)
+h_d_450_3.Scale(15./2.)
+
+f1_450_3 = TF1("f1_450_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_500_3 = 1 /h_d_500_3.Integral()
+norm = h_d_500_3.Scale(a_500_3)
+h_d_500_3.Scale(15./2.)
+
+f1_500_3 = TF1("f1_500_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_550_3 = 1 /h_d_550_3.Integral()
+norm = h_d_550_3.Scale(a_550_3)
+h_d_550_3.Scale(15./2.)
+
+f1_550_3 = TF1("f1_550_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_600_3 = 1 /h_d_600_3.Integral()
+norm = h_d_600_3.Scale(a_600_3)
+h_d_600_3.Scale(15./2.)
+
+f1_600_3 = TF1("f1_600_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_650_3 = 1 /h_d_650_3.Integral()
+norm = h_d_650_3.Scale(a_650_3)
+h_d_650_3.Scale(15./2.)
+
+f1_650_3 = TF1("f1_650_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_700_3 = 1 /h_d_700_3.Integral()
+norm = h_d_700_3.Scale(a_700_3)
+h_d_700_3.Scale(15./2.)
+
+f1_700_3 = TF1("f1_700_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_750_3 = 1 /h_d_750_3.Integral()
+norm = h_d_750_3.Scale(a_750_3)
+h_d_750_3.Scale(15./2.)
+
+f1_750_3 = TF1("f1_750_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_800_3 = 1 /h_d_800_3.Integral()
+norm = h_d_800_3.Scale(a_800_3)
+h_d_800_3.Scale(15./2.)
+
+f1_800_3 = TF1("f1_800_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_850_3 = 1 /h_d_850_3.Integral()
+norm = h_d_850_3.Scale(a_850_3)
+h_d_850_3.Scale(15./2.)
+
+f1_850_3 = TF1("f1_850_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_900_3 = 1 /h_d_900_3.Integral()
+norm = h_d_900_3.Scale(a_900_3)
+h_d_900_3.Scale(15./2.)
+
+f1_900_3 = TF1("f1_900_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_950_3 = 1 /h_d_950_3.Integral()
+norm = h_d_950_3.Scale(a_950_3)
+h_d_950_3.Scale(15./2.)
+
+f1_950_3 = TF1("f1_950_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_1000_3 = 1 /h_d_1000_3.Integral()
+norm = h_d_1000_3.Scale(a_1000_3)
+h_d_1000_3.Scale(15./2.)
+
+f1_1000_3 = TF1("f1_1000_3" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+# cuts in cos theta 
+
+
+a_400_4 = 1 /h_d_400_4.Integral()
+norm = h_d_400_4.Scale(a_400_4)
+h_d_400_4.Scale(15./2.)
+
+f1_400_4 = TF1("f1_400_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_450_4 = 1 /h_d_450_4.Integral()
+norm = h_d_450_4.Scale(a_450_4)
+h_d_450_4.Scale(15./2.)
+
+f1_450_4 = TF1("f1_450_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_500_4 = 1 /h_d_500_4.Integral()
+norm = h_d_500_4.Scale(a_500_4)
+h_d_500_4.Scale(15./2.)
+
+f1_500_4 = TF1("f1_500_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_550_4 = 1 /h_d_550_4.Integral()
+norm = h_d_550_4.Scale(a_550_4)
+h_d_550_4.Scale(15./2.)
+
+f1_550_4 = TF1("f1_550_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_600_4 = 1 /h_d_600_4.Integral()
+norm = h_d_600_4.Scale(a_600_4)
+h_d_600_4.Scale(15./2.)
+
+f1_600_4 = TF1("f1_600_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_650_4 = 1 /h_d_650_4.Integral()
+norm = h_d_650_4.Scale(a_650_4)
+h_d_650_4.Scale(15./2.)
+
+f1_650_4 = TF1("f1_650_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_700_4 = 1 /h_d_700_4.Integral()
+norm = h_d_700_4.Scale(a_700_4)
+h_d_700_4.Scale(15./2.)
+
+f1_700_4 = TF1("f1_700_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_750_4 = 1 /h_d_750_4.Integral()
+norm = h_d_750_4.Scale(a_750_4)
+h_d_750_4.Scale(15./2.)
+
+f1_750_4 = TF1("f1_750_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_800_4 = 1 /h_d_800_4.Integral()
+norm = h_d_800_4.Scale(a_800_4)
+h_d_800_4.Scale(15./2.)
+
+f1_800_4 = TF1("f1_800_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_850_4 = 1 /h_d_850_4.Integral()
+norm = h_d_850_4.Scale(a_850_4)
+h_d_850_4.Scale(15./2.)
+
+f1_850_4 = TF1("f1_850_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_900_4 = 1 /h_d_900_4.Integral()
+norm = h_d_900_4.Scale(a_900_4)
+h_d_900_4.Scale(15./2.)
+
+f1_900_4 = TF1("f1_900_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_950_4 = 1 /h_d_950_4.Integral()
+norm = h_d_950_4.Scale(a_950_4)
+h_d_950_4.Scale(15./2.)
+
+f1_950_4 = TF1("f1_950_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+a_1000_4 = 1 /h_d_1000_4.Integral()
+norm = h_d_1000_4.Scale(a_1000_4)
+h_d_1000_4.Scale(15./2.)
+
+f1_1000_4 = TF1("f1_1000_4" , "0.5 * (-1 * [0] * x + [1])" , -1 , 1)
+
+#DRAWING HISTOGRAM
+c1=TCanvas("c1","c1",800,600)
+c1.cd()
+c1.SetGrid()
+c1.SetBorderSize( 12 )
+h_lep_top_pt.SetFillColor( 40 )
+h_lep_top_pt.Draw()
+
+c2=TCanvas("c2","c2",800,600)
+c2.cd()
+c2.SetGrid()
+c2.SetBorderSize( 12 )
+h_lep_top_eta.SetFillColor( 29 )
+h_lep_top_eta.Draw()
+
+c3=TCanvas("c3","c3",800,600)
+h_lep_top_phi.SetFillColor( 38 )
+c3.cd()
+c3.SetGrid()
+c3.SetBorderSize( 12 )
+h_lep_top_phi.Draw()
+
+c4=TCanvas("c4","c4",800,600)
+h_lep_top_e.SetFillColor( 30 )
+c4.cd()
+c4.SetGrid()
+c4.SetBorderSize( 12 )
+h_lep_top_e.Draw()
+
+
+c6=TCanvas("c6","c6",800,600)
+h_dilepton_mass.SetFillColor( 30 )
+c6.cd()
+c6.SetGrid()
+c6.SetBorderSize( 12 )
+h_dilepton_mass.Draw()
+
+
+c5=TCanvas("c5","c5",800,600)
+h_bjet_invmass.SetFillColor( 30 )
+c5.cd()
+c5.SetGrid()
+c5.SetBorderSize( 12 )
+h_bjet_invmass.Draw()
+
+c7=TCanvas("c7","c7",800,600)
+h_total_invmass.SetFillColor( 40 )
+c7.cd()
+c7.SetGrid()
+c7.SetBorderSize( 12 )
+h_total_invmass.Draw()
+
+c8=TCanvas("c8","c8",800,600)
+h_nu_invmass.SetFillColor( 40 )
+c8.cd()
+c8.SetGrid()
+c8.SetBorderSize( 12 )
+h_nu_invmass.Draw()
+
+c9=TCanvas("c9","c9",800,600)
+h_diff_cos_phi.SetFillColor( 40 )
+c9.cd()
+c9.SetGrid()
+c9.SetBorderSize( 12 )
+h_diff_cos_phi.Draw()
+
+c10=TCanvas("c10","c10",800,600)
+h_top_invmass.SetFillColor( 40 )
+c10.cd()
+c10.SetGrid()
+c10.SetBorderSize( 12 )
+h_top_invmass.Draw()
+
+c11=TCanvas("c11","c11",800,600)
+h_antitop_invmass.SetFillColor( 40 )
+c11.cd()
+c11.SetGrid()
+c11.SetBorderSize( 12 )
+h_antitop_invmass.Draw()
+
+c12=TCanvas("c12","c12",800,600)
+h_top_antitop_invmass.SetFillColor( 40 )
+c12.cd()
+c12.SetGrid()
+c12.SetBorderSize( 12 )
+h_top_invmass.Draw("same")
+h_antitop_invmass.Draw("same")
+
+c13=TCanvas("c13","c13",800,600)
+h_cos_phi.SetFillColor( 40 )
+c13.cd()
+c13.SetGrid()
+c13.SetBorderSize( 12 )
+h_cos_phi.Fit(f1)
+h_cos_phi.Draw()
+f1.Draw("same")
+
+c14=TCanvas("c14","c14",800,600)
+h_cos_phi_450.SetFillColor( 40 )
+c14.cd()
+c14.SetGrid()
+c14.SetBorderSize( 12 )
+h_cos_phi_450.Fit(f1_450)
+h_cos_phi_450.Draw()
+f1_450.Draw("same")
+
+c15=TCanvas("c15","c15",800,600)
+h_cos_phi_550.SetFillColor( 40 )
+c15.cd()
+c15.SetGrid()
+c15.SetBorderSize( 12 )
+h_cos_phi_550.Fit(f1_550)
+h_cos_phi_550.Draw()
+f1_550.Draw("same")
+
+c17=TCanvas("c17","c17",800,600)
+h_cos_phi_above550.SetFillColor( 40 )
+c17.cd()
+c17.SetGrid()
+c17.SetBorderSize( 12 )
+h_cos_phi_above550.Fit(f1_above550)
+h_cos_phi_above550.Draw()
+f1_above550.Draw("same")
+
+c18=TCanvas("c18","c18",800,600)
+#h_extrajets.SetFillColor( 40 )
+c18.cd()
+c18.SetGrid()
+c18.SetBorderSize( 12 )
+h_jet1.Fit(f1_jet1)
+h_jet1.Draw()
+f1_jet1.Draw("same")
+
+c19=TCanvas("c19","c19",800,600)
+#h_extrajets.SetFillColor( 40 )
+c19.cd()
+c19.SetGrid()
+c19.SetBorderSize( 12 )
+h_jet2.Fit(f1_jet2)
+h_jet2.Draw()
+f1_jet2.Draw("same")
+
+c20=TCanvas("c20","c20",800,600)
+#h_extrajets.SetFillColor( 40 )
+c20.cd()
+c20.SetGrid()
+c20.SetBorderSize( 12 )
+h_jet3.Fit(f1_jet3)
+h_jet3.Draw()
+f1_jet3.Draw("same")
+
+c23=TCanvas("c23","c23",800,600)
+h_cos_phi_450_3jet.SetFillColor( 40 )
+c23.cd()
+c23.SetGrid()
+c23.SetBorderSize( 12 )
+h_cos_phi_450_3jet.Fit(f1_450_3jet)
+h_cos_phi_450_3jet.Draw()
+f1_450_3jet.Draw("same")
+
+c24=TCanvas("c24","c24",800,600)
+h_cos_phi_550_3jet.SetFillColor( 40 )
+c24.cd()
+c24.SetGrid()
+
+c24.SetBorderSize( 12 )
+h_cos_phi_550_3jet.Fit(f1_550_3jet)
+h_cos_phi_550_3jet.Draw()
+f1_550_3jet.Draw("same")
+
+c25=TCanvas("c25","c25",800,600)
+h_cos_phi_above550_3jet.SetFillColor( 40 )
+c25.cd()
+c25.SetGrid()
+c25.SetBorderSize( 12 )
+h_cos_phi_above550_3jet.Fit(f1_above550_3jet)
+h_cos_phi_above550_3jet.Draw()
+f1_above550_3jet.Draw("same")
+
+c26=TCanvas("c26","c26",800,600)
+h_X_f.SetFillColor( 40 )
+c26.cd()
+c26.SetGrid()
+c26.SetBorderSize( 12 )
+h_X_f.Draw()
+
+c27=TCanvas("c27","c27",800,600)
+h_cos_theta.SetFillColor( 40 )
+c27.cd()
+c27.SetGrid()
+c27.SetBorderSize( 12 )
+h_cos_theta.Draw()
+
+
+c29=TCanvas("c29","c29",800,600)
+c29.cd()
+h_X_f_03.Fit(f1_X_f_03)
+h_X_f_03.Draw()
+f1_X_f_03.Draw("same")
+
+c30=TCanvas("c30","c30",800,600)
+c30.cd()
+h_X_f_1.Fit(f1_X_f_1)
+h_X_f_1.Draw()
+f1_X_f_1.Draw("same")
+
+
+
+c32=TCanvas("c32","c32",800,600)
+c32.cd()
+h_X_f_above1.Fit(f1_X_f_above1)
+h_X_f_above1.Draw()
+f1_X_f_above1.Draw("same")
+
+###
+
+c33=TCanvas("c33","c33",800,600)
+c33.cd()
+h_d_400.Fit(f1_400)
+h_d_400.Draw()
+f1_400.Draw("same")
+
+c34=TCanvas("c34","c34",800,600)
+c34.cd()
+h_d_500.Fit(f1_500)
+h_d_500.Draw()
+f1_500.Draw("same")
+
+c35=TCanvas("c35","c35",800,600)
+c35.cd()
+h_d_600.Fit(f1_600)
+h_d_600.Draw()
+f1_600.Draw("same")
+
+c36=TCanvas("c36","c36",800,600)
+c36.cd()
+h_d_700.Fit(f1_700)
+h_d_700.Draw()
+f1_700.Draw("same")
+
+c37=TCanvas("c37","c37",800,600)
+c37.cd()
+h_d_800.Fit(f1_800)
+h_d_800.Draw()
+f1_800.Draw("same")
+
+c38=TCanvas("c38","c38",800,600)
+c38.cd()
+h_d_900.Fit(f1_900)
+h_d_900.Draw()
+f1_900.Draw("same")
+
+c39=TCanvas("c39","c39",800,600)
+c39.cd()
+h_d_1000.Fit(f1_1000)
+h_d_1000.Draw()
+f1_1000.Draw("same")
+
+c333=TCanvas("c333","c333",800,600)
+c333.cd()
+h_d_450.Fit(f1_450)
+h_d_450.Draw()
+f1_450.Draw("same")
+
+c344=TCanvas("c344","c344",800,600)
+c344.cd()
+h_d_550.Fit(f1_550)
+h_d_550.Draw()
+f1_550.Draw("same")
+
+c355=TCanvas("c355","c355",800,600)
+c355.cd()
+h_d_650.Fit(f1_650)
+h_d_650.Draw()
+f1_650.Draw("same")
+
+c366=TCanvas("c366","c366",800,600)
+c366.cd()
+h_d_750.Fit(f1_750)
+h_d_750.Draw()
+f1_750.Draw("same")
+
+c377=TCanvas("c377","c377",800,600)
+c377.cd()
+h_d_850.Fit(f1_850)
+h_d_850.Draw()
+f1_850.Draw("same")
+
+c388=TCanvas("c388","c388",800,600)
+c388.cd()
+h_d_950.Fit(f1_950)
+h_d_950.Draw()
+f1_950.Draw("same")
+
+
+
+
+########
+
+
+c43=TCanvas("c43","c43",800,600)
+c43.cd()
+h_d_400_1.Fit(f1_400_1)
+h_d_400_1.Draw()
+f1_400_1.Draw("same")
+
+c44=TCanvas("c44","c44",800,600)
+c44.cd()
+h_d_500_1.Fit(f1_500_1)
+h_d_500_1.Draw()
+f1_500_1.Draw("same")
+
+c45=TCanvas("c45","c45",800,600)
+c45.cd()
+h_d_600_1.Fit(f1_600_1)
+h_d_600_1.Draw()
+f1_600_1.Draw("same")
+
+c46=TCanvas("c46","c46",800,600)
+c46.cd()
+h_d_700_1.Fit(f1_700_1)
+h_d_700_1.Draw()
+f1_700_1.Draw("same")
+
+c47=TCanvas("c47","c47",800,600)
+c47.cd()
+h_d_800_1.Fit(f1_800_1)
+h_d_800_1.Draw()
+f1_800_1.Draw("same")
+
+c48=TCanvas("c48","c48",800,600)
+c48.cd()
+h_d_900_1.Fit(f1_900_1)
+h_d_900_1.Draw()
+f1_900_1.Draw("same")
+
+
+c49=TCanvas("c49","c49",800,600)
+c49.cd()
+h_d_1000_1.Fit(f1_1000_1)
+h_d_1000_1.Draw()
+f1_1000_1.Draw("same")
+
+c433=TCanvas("c433","c433",800,600)
+c433.cd()
+h_d_450_1.Fit(f1_450_1)
+h_d_450_1.Draw()
+f1_450_1.Draw("same")
+
+c444=TCanvas("c444","c444",800,600)
+c444.cd()
+h_d_550_1.Fit(f1_550_1)
+h_d_550_1.Draw()
+f1_550_1.Draw("same")
+
+
+c455=TCanvas("c455","c455",800,600)
+c455.cd()
+h_d_650_1.Fit(f1_650_1)
+h_d_650_1.Draw()
+f1_650_1.Draw("same")
+
+
+c466=TCanvas("c466","c466",800,600)
+c466.cd()
+h_d_750_1.Fit(f1_750_1)
+h_d_750_1.Draw()
+f1_750_1.Draw("same")
+
+
+c477=TCanvas("c477","c477",800,600)
+c477.cd()
+h_d_850_1.Fit(f1_850_1)
+h_d_850_1.Draw()
+f1_850_1.Draw("same")
+
+
+c488=TCanvas("c488","c488",800,600)
+c488.cd()
+h_d_950_1.Fit(f1_950_1)
+h_d_950_1.Draw()
+f1_950_1.Draw("same")
+
+#### 
+
+
+
+
+
+
+
+
+
+#xf cuts
+
+c53=TCanvas("c53","c53",800,600)
+c53.cd()
+h_d_400_2.Fit(f1_400_2)
+h_d_400_2.Draw()
+f1_400_2.Draw("same")
+
+c54=TCanvas("c54","c54",800,600)
+c54.cd()
+h_d_500_2.Fit(f1_500_2)
+h_d_500_2.Draw()
+f1_500_2.Draw("same")
+
+c55=TCanvas("c55","c55",800,600)
+c55.cd()
+h_d_600_2.Fit(f1_600_2)
+h_d_600_2.Draw()
+f1_600_2.Draw("same")
+
+c56=TCanvas("c56","c56",800,600)
+c56.cd()
+h_d_700_2.Fit(f1_700_2)
+h_d_700_2.Draw()
+f1_700_2.Draw("same")
+
+c57=TCanvas("c57","c57",800,600)
+c57.cd()
+h_d_800_2.Fit(f1_800_2)
+h_d_800_2.Draw()
+f1_800_2.Draw("same")
+
+c58=TCanvas("c58","c58",800,600)
+c58.cd()
+h_d_900_2.Fit(f1_900_2)
+h_d_900_2.Draw()
+f1_900_2.Draw("same")
+
+
+c59=TCanvas("c59","c59",800,600)
+c59.cd()
+h_d_1000_2.Fit(f1_1000_2)
+h_d_1000_2.Draw()
+f1_1000_2.Draw("same")
+
+c533=TCanvas("c533","c533",800,600)
+c533.cd()
+h_d_450_2.Fit(f1_450_2)
+h_d_450_2.Draw()
+f1_450_2.Draw("same")
+
+c544=TCanvas("c544","c544",800,600)
+c544.cd()
+h_d_550_2.Fit(f1_550_2)
+h_d_550_2.Draw()
+f1_550_2.Draw("same")
+
+
+c555=TCanvas("c555","c555",800,600)
+c555.cd()
+h_d_650_2.Fit(f1_650_2)
+h_d_650_2.Draw()
+f1_650_2.Draw("same")
+
+
+c566=TCanvas("c566","c566",800,600)
+c566.cd()
+h_d_750_2.Fit(f1_750_2)
+h_d_750_2.Draw()
+f1_750_2.Draw("same")
+
+
+c577=TCanvas("c577","c577",800,600)
+c577.cd()
+h_d_850_2.Fit(f1_850_2)
+h_d_850_2.Draw()
+f1_850_2.Draw("same")
+
+
+c588=TCanvas("c588","c588",800,600)
+c588.cd()
+h_d_950_2.Fit(f1_950_2)
+h_d_950_2.Draw()
+f1_950_2.Draw("same")
+
+
+
+
+
+#jet cuts
+
+c63=TCanvas("c63","c63",800,600)
+c63.cd()
+h_d_400_3.Fit(f1_400_3)
+h_d_400_3.Draw()
+f1_400_3.Draw("same")
+
+c64=TCanvas("c64","c64",800,600)
+c64.cd()
+h_d_500_3.Fit(f1_500_3)
+h_d_500_3.Draw()
+f1_500_3.Draw("same")
+
+c65=TCanvas("c65","c65",800,600)
+c65.cd()
+h_d_600_3.Fit(f1_600_3)
+h_d_600_3.Draw()
+f1_600_3.Draw("same")
+
+c66=TCanvas("c66","c66",800,600)
+c66.cd()
+h_d_700_3.Fit(f1_700_3)
+h_d_700_3.Draw()
+f1_700_3.Draw("same")
+
+c67=TCanvas("c67","c67",800,600)
+c67.cd()
+h_d_800_3.Fit(f1_800_3)
+h_d_800_3.Draw()
+f1_800_3.Draw("same")
+
+c68=TCanvas("c68","c68",800,600)
+c68.cd()
+h_d_900_3.Fit(f1_900_3)
+h_d_900_3.Draw()
+f1_900_3.Draw("same")
+
+
+c69=TCanvas("c69","69",800,600)
+c69.cd()
+h_d_1000_3.Fit(f1_1000_3)
+h_d_1000_3.Draw()
+f1_1000_3.Draw("same")
+
+c633=TCanvas("c633","c533",800,600)
+c633.cd()
+h_d_450_3.Fit(f1_450_3)
+h_d_450_3.Draw()
+f1_450_3.Draw("same")
+
+c644=TCanvas("c644","c644",800,600)
+c644.cd()
+h_d_550_3.Fit(f1_550_3)
+h_d_550_3.Draw()
+f1_550_3.Draw("same")
+
+
+c655=TCanvas("c655","c655",800,600)
+c655.cd()
+h_d_650_3.Fit(f1_650_3)
+h_d_650_3.Draw()
+f1_650_3.Draw("same")
+
+
+c666=TCanvas("c666","c666",800,600)
+c666.cd()
+h_d_750_3.Fit(f1_750_3)
+h_d_750_3.Draw()
+f1_750_3.Draw("same")
+
+
+c677=TCanvas("c677","c677",800,600)
+c677.cd()
+h_d_850_3.Fit(f1_850_3)
+h_d_850_3.Draw()
+f1_850_3.Draw("same")
+
+
+c688=TCanvas("c688","c688",800,600)
+c688.cd()
+h_d_950_3.Fit(f1_950_3)
+h_d_950_3.Draw()
+f1_950_3.Draw("same")
+
+
+#cos theta cuts 
+
+c70=TCanvas("c70","c70",800,600)
+c70.cd()
+h_d_400_4.Fit(f1_400_4)
+h_d_400_4.Draw()
+f1_400_4.Draw("same")
+
+c71=TCanvas("c71","c71",800,600)
+c71.cd()
+h_d_500_4.Fit(f1_500_4)
+h_d_500_4.Draw()
+f1_500_4.Draw("same")
+
+c72=TCanvas("c72","c72",800,600)
+c72.cd()
+h_d_600_4.Fit(f1_600_4)
+h_d_600_4.Draw()
+f1_600_4.Draw("same")
+
+c73=TCanvas("c73","c73",800,600)
+c73.cd()
+h_d_700_4.Fit(f1_700_4)
+h_d_700_4.Draw()
+f1_700_4.Draw("same")
+
+c74=TCanvas("c74","c74",800,600)
+c74.cd()
+h_d_800_4.Fit(f1_800_4)
+h_d_800_4.Draw()
+f1_800_4.Draw("same")
+
+c75=TCanvas("c75","c75",800,600)
+c75.cd()
+h_d_900_4.Fit(f1_900_4)
+h_d_900_4.Draw()
+f1_900_4.Draw("same")
+
+
+c76=TCanvas("c76","76",800,600)
+c76.cd()
+h_d_1000_4.Fit(f1_1000_4)
+h_d_1000_4.Draw()
+f1_1000_4.Draw("same")
+
+c733=TCanvas("c733","c733",800,600)
+c733.cd()
+h_d_450_4.Fit(f1_450_4)
+h_d_450_4.Draw()
+f1_450_4.Draw("same")
+
+c744=TCanvas("c744","c744",800,600)
+c744.cd()
+h_d_550_4.Fit(f1_550_4)
+h_d_550_4.Draw()
+f1_550_4.Draw("same")
+
+
+c755=TCanvas("c755","c755",800,600)
+c755.cd()
+h_d_650_4.Fit(f1_650_4)
+h_d_650_4.Draw()
+f1_650_4.Draw("same")
+
+
+c766=TCanvas("c766","c766",800,600)
+c766.cd()
+h_d_750_4.Fit(f1_750_4)
+h_d_750_4.Draw()
+f1_750_4.Draw("same")
+
+
+c777=TCanvas("c777","c777",800,600)
+c777.cd()
+h_d_850_4.Fit(f1_850_4)
+h_d_850_4.Draw()
+f1_850_4.Draw("same")
+
+
+c788=TCanvas("c788","c788",800,600)
+c788.cd()
+h_d_950_4.Fit(f1_950_4)
+h_d_950_4.Draw()
+f1_950_4.Draw("same")
+
+
+
+
+#Getting parameters for invariant mass and d 
+
+par = []
+
+par.append(f1.GetParameter(0))
+par.append(f1_450.GetParameter(0))
+par.append(f1_550.GetParameter(0))
+par.append(f1_above550.GetParameter(0))
+
+par_error = []
+
+par_error.append(f1.GetParError(0))
+par_error.append(f1_450.GetParError(0))
+par_error.append(f1_550.GetParError(0))
+par_error.append(f1_above550.GetParError(0))
+
+#Getting parameters for bjet and d 
+
+par_bjet = []
+
+par_bjet.append(f1_jet1.GetParameter(0))
+par_bjet.append(f1_jet2.GetParameter(0))
+par_bjet.append(f1_jet3.GetParameter(0))
+
+par_error_bjet = []
+
+par_error_bjet.append(f1_jet1.GetParError(0))
+par_error_bjet.append(f1_jet2.GetParError(0))
+par_error_bjet.append(f1_jet3.GetParError(0))
+
+#Getting parameters for invariant mass and d jet 3
+
+par_3jet = []
+
+
+par_3jet.append(f1_450_3jet.GetParameter(0))
+par_3jet.append(f1_550_3jet.GetParameter(0))
+par_3jet.append(f1_above550_3jet.GetParameter(0))
+
+par_error_3jet = []
+
+
+par_error_3jet.append(f1_450_3jet.GetParError(0))
+par_error_3jet.append(f1_550_3jet.GetParError(0))
+par_error_3jet.append(f1_above550_3jet.GetParError(0))
+
+#Getting parameters for Xf and d 
+
+par_xf = []
+
+
+par_xf.append(f1_X_f_03.GetParameter(0))
+par_xf.append(f1_X_f_1.GetParameter(0))
+par_xf.append(f1_X_f_above1.GetParameter(0))
+
+par_error_xf = []
+
+
+par_error_xf.append(f1_X_f_03.GetParError(0))
+par_error_xf.append(f1_X_f_1.GetParError(0))
+par_error_xf.append(f1_X_f_above1.GetParError(0))
+
+#Getting parameters for d and invmass (uncut)
+
+par_d_invmass = []
+
+
+par_d_invmass.append(f1_400.GetParameter(0))
+par_d_invmass.append(f1_450.GetParameter(0))
+par_d_invmass.append(f1_500.GetParameter(0))
+par_d_invmass.append(f1_550.GetParameter(0))
+par_d_invmass.append(f1_600.GetParameter(0))
+par_d_invmass.append(f1_650.GetParameter(0))
+par_d_invmass.append(f1_700.GetParameter(0))
+par_d_invmass.append(f1_750.GetParameter(0))
+par_d_invmass.append(f1_800.GetParameter(0))
+par_d_invmass.append(f1_850.GetParameter(0))
+par_d_invmass.append(f1_900.GetParameter(0))
+par_d_invmass.append(f1_950.GetParameter(0))
+par_d_invmass.append(f1_1000.GetParameter(0))
+
+
+par_error_d_invmass = []
+
+
+par_error_d_invmass.append(f1_400.GetParError(0))
+par_error_d_invmass.append(f1_450.GetParError(0))
+par_error_d_invmass.append(f1_500.GetParError(0))
+par_error_d_invmass.append(f1_550.GetParError(0))
+par_error_d_invmass.append(f1_600.GetParError(0))
+par_error_d_invmass.append(f1_650.GetParError(0))
+par_error_d_invmass.append(f1_700.GetParError(0))
+par_error_d_invmass.append(f1_750.GetParError(0))
+par_error_d_invmass.append(f1_800.GetParError(0))
+par_error_d_invmass.append(f1_850.GetParError(0))
+par_error_d_invmass.append(f1_900.GetParError(0))
+par_error_d_invmass.append(f1_950.GetParError(0))
+par_error_d_invmass.append(f1_1000.GetParError(0))
+
+
+
+#Getting parameters for d and invmass (cut)
+
+par_d_invmass_1 = []
+
+
+par_d_invmass_1.append(f1_400_1.GetParameter(0))
+par_d_invmass_1.append(f1_450_1.GetParameter(0))
+par_d_invmass_1.append(f1_500_1.GetParameter(0))
+par_d_invmass_1.append(f1_550_1.GetParameter(0))
+par_d_invmass_1.append(f1_600_1.GetParameter(0))
+par_d_invmass_1.append(f1_650_1.GetParameter(0))
+par_d_invmass_1.append(f1_700_1.GetParameter(0))
+par_d_invmass_1.append(f1_750_1.GetParameter(0))
+par_d_invmass_1.append(f1_800_1.GetParameter(0))
+par_d_invmass_1.append(f1_850_1.GetParameter(0))
+par_d_invmass_1.append(f1_900_1.GetParameter(0))
+par_d_invmass_1.append(f1_950_1.GetParameter(0))
+par_d_invmass_1.append(f1_1000_1.GetParameter(0))
+
+
+par_error_d_invmass_1 = []
+
+
+par_error_d_invmass_1.append(f1_400_1.GetParError(0))
+par_error_d_invmass_1.append(f1_450_1.GetParError(0))
+par_error_d_invmass_1.append(f1_500_1.GetParError(0))
+par_error_d_invmass_1.append(f1_550_1.GetParError(0))
+par_error_d_invmass_1.append(f1_600_1.GetParError(0))
+par_error_d_invmass_1.append(f1_650_1.GetParError(0))
+par_error_d_invmass_1.append(f1_700_1.GetParError(0))
+par_error_d_invmass_1.append(f1_750_1.GetParError(0))
+par_error_d_invmass_1.append(f1_800_1.GetParError(0))
+par_error_d_invmass_1.append(f1_850_1.GetParError(0))
+par_error_d_invmass_1.append(f1_900_1.GetParError(0))
+par_error_d_invmass_1.append(f1_950_1.GetParError(0))
+par_error_d_invmass_1.append(f1_1000_1.GetParError(0))
+
+
+#Getting parameters for d and invmass (cut) with xf
+
+par_d_invmass_2 = []
+
+
+par_d_invmass_2.append(f1_400_2.GetParameter(0))
+par_d_invmass_2.append(f1_450_2.GetParameter(0))
+par_d_invmass_2.append(f1_500_2.GetParameter(0))
+par_d_invmass_2.append(f1_550_2.GetParameter(0))
+par_d_invmass_2.append(f1_600_2.GetParameter(0))
+par_d_invmass_2.append(f1_650_2.GetParameter(0))
+par_d_invmass_2.append(f1_700_2.GetParameter(0))
+par_d_invmass_2.append(f1_750_2.GetParameter(0))
+par_d_invmass_2.append(f1_800_2.GetParameter(0))
+par_d_invmass_2.append(f1_850_2.GetParameter(0))
+par_d_invmass_2.append(f1_900_2.GetParameter(0))
+par_d_invmass_2.append(f1_950_2.GetParameter(0))
+par_d_invmass_2.append(f1_1000_2.GetParameter(0))
+
+par_error_d_invmass_2 = []
+
+
+par_error_d_invmass_2.append(f1_400_2.GetParError(0))
+par_error_d_invmass_2.append(f1_450_2.GetParError(0))
+par_error_d_invmass_2.append(f1_500_2.GetParError(0))
+par_error_d_invmass_2.append(f1_550_2.GetParError(0))
+par_error_d_invmass_2.append(f1_600_2.GetParError(0))
+par_error_d_invmass_2.append(f1_650_2.GetParError(0))
+par_error_d_invmass_2.append(f1_700_2.GetParError(0))
+par_error_d_invmass_2.append(f1_750_2.GetParError(0))
+par_error_d_invmass_2.append(f1_800_2.GetParError(0))
+par_error_d_invmass_2.append(f1_850_2.GetParError(0))
+par_error_d_invmass_2.append(f1_900_2.GetParError(0))
+par_error_d_invmass_2.append(f1_950_2.GetParError(0))
+par_error_d_invmass_2.append(f1_1000_2.GetParError(0))
+
+
+#Getting parameters for d and invmass (cut) with jets
+
+par_d_invmass_3 = []
+
+
+par_d_invmass_3.append(f1_400_3.GetParameter(0))
+par_d_invmass_3.append(f1_450_3.GetParameter(0))
+par_d_invmass_3.append(f1_500_3.GetParameter(0))
+par_d_invmass_3.append(f1_550_3.GetParameter(0))
+par_d_invmass_3.append(f1_600_3.GetParameter(0))
+par_d_invmass_3.append(f1_650_3.GetParameter(0))
+par_d_invmass_3.append(f1_700_3.GetParameter(0))
+par_d_invmass_3.append(f1_750_3.GetParameter(0))
+par_d_invmass_3.append(f1_800_3.GetParameter(0))
+par_d_invmass_3.append(f1_850_3.GetParameter(0))
+par_d_invmass_3.append(f1_900_3.GetParameter(0))
+par_d_invmass_3.append(f1_950_3.GetParameter(0))
+par_d_invmass_3.append(f1_1000_3.GetParameter(0))
+
+
+par_error_d_invmass_3 = []
+
+
+par_error_d_invmass_3.append(f1_400_3.GetParError(0))
+par_error_d_invmass_3.append(f1_450_3.GetParError(0))
+par_error_d_invmass_3.append(f1_500_3.GetParError(0))
+par_error_d_invmass_3.append(f1_550_3.GetParError(0))
+par_error_d_invmass_3.append(f1_600_3.GetParError(0))
+par_error_d_invmass_3.append(f1_650_3.GetParError(0))
+par_error_d_invmass_3.append(f1_700_3.GetParError(0))
+par_error_d_invmass_3.append(f1_750_3.GetParError(0))
+par_error_d_invmass_3.append(f1_800_3.GetParError(0))
+par_error_d_invmass_3.append(f1_850_3.GetParError(0))
+par_error_d_invmass_3.append(f1_900_3.GetParError(0))
+par_error_d_invmass_3.append(f1_950_3.GetParError(0))
+par_error_d_invmass_3.append(f1_1000_3.GetParError(0))
+
+
+#Getting parameters for d and invmass (cut) with cos  theta
+
+par_d_invmass_4 = []
+
+
+par_d_invmass_4.append(f1_400_4.GetParameter(0))
+par_d_invmass_4.append(f1_450_4.GetParameter(0))
+par_d_invmass_4.append(f1_500_4.GetParameter(0))
+par_d_invmass_4.append(f1_550_4.GetParameter(0))
+par_d_invmass_4.append(f1_600_4.GetParameter(0))
+par_d_invmass_4.append(f1_650_4.GetParameter(0))
+par_d_invmass_4.append(f1_700_4.GetParameter(0))
+par_d_invmass_4.append(f1_750_4.GetParameter(0))
+par_d_invmass_4.append(f1_800_4.GetParameter(0))
+par_d_invmass_4.append(f1_850_4.GetParameter(0))
+par_d_invmass_4.append(f1_900_4.GetParameter(0))
+par_d_invmass_4.append(f1_950_4.GetParameter(0))
+par_d_invmass_4.append(f1_1000_4.GetParameter(0))
+
+
+par_error_d_invmass_4 = []
+
+
+par_error_d_invmass_4.append(f1_400_4.GetParError(0))
+par_error_d_invmass_4.append(f1_450_4.GetParError(0))
+par_error_d_invmass_4.append(f1_500_4.GetParError(0))
+par_error_d_invmass_4.append(f1_600_4.GetParError(0))
+par_error_d_invmass_4.append(f1_650_4.GetParError(0))
+par_error_d_invmass_4.append(f1_700_4.GetParError(0))
+par_error_d_invmass_4.append(f1_750_4.GetParError(0))
+par_error_d_invmass_4.append(f1_800_4.GetParError(0))
+par_error_d_invmass_4.append(f1_850_4.GetParError(0))
+par_error_d_invmass_4.append(f1_900_4.GetParError(0))
+par_error_d_invmass_4.append(f1_950_4.GetParError(0))
+par_error_d_invmass_4.append(f1_1000_4.GetParError(0))
+
+
+
+#labels = []
+
+#label
+
+#D versus mass
+d_mass=TH1F("d_mass"," D versus mass ",len(par),0,len(par)) 
+d_mass.GetXaxis().SetTitle("Mass (GeV)")
+d_mass.GetYaxis().SetTitle("D parameter")
+
+for i in range(0 , len(par)):
+    d_mass.SetBinContent(i+1 , par[i])
+    d_mass.SetBinError(i+1, par_error[i])
+    d_mass.GetXaxis().SetBinLabel(1,"Total")
+    d_mass.GetXaxis().SetBinLabel(2,"0-450")
+    d_mass.GetXaxis().SetBinLabel(3,"450-450")
+    d_mass.GetXaxis().SetBinLabel(4,"above 550")
+    
+c16=TCanvas("c16","c16",800,600)
+c16.cd()
+c16.SetGrid()
+c16.SetBorderSize( 12 )
+d_mass.Draw("*")
+
+
+#D versus bjet
+d_bjet=TH1F("d_bjet"," D versus bjet ",len(par_bjet),0,len(par_bjet)) 
+d_bjet.GetXaxis().SetTitle("Bjet")
+d_bjet.GetYaxis().SetTitle("D parameter")
+
+for i in range(0 , len(par_bjet)):
+    d_bjet.SetBinContent(i+1 , par_bjet[i])
+    d_bjet.SetBinError(i+1, par_error_bjet[i])
+    d_bjet.GetXaxis().SetBinLabel(1,"2 Jets")
+    d_bjet.GetXaxis().SetBinLabel(2,"3 Jets")
+    d_bjet.GetXaxis().SetBinLabel(3,"Above 3 Jets")
+   
+    
+c21=TCanvas("c21","c21",800,600)
+c21.cd()
+c21.SetGrid()
+c21.SetBorderSize( 12 )
+d_bjet.Draw("*")
+
+#D versus mass for jet less than 3 
+
+d_mass_3jet=TH1F("d_mass_3jet"," D versus mass for jet < 3 ",len(par_3jet),0,len(par_3jet)) 
+d_mass_3jet.GetXaxis().SetTitle("Mass (GeV)")
+d_mass_3jet.GetYaxis().SetTitle("D parameter")
+
+for i in range(0 , len(par_3jet)):
+    d_mass_3jet.SetBinContent(i+1 , par_3jet[i])
+    d_mass_3jet.SetBinError(i+1, par_error_3jet[i])
+    #d_mass_3jet.GetXaxis().SetBinLabel(1,"Total")
+    d_mass_3jet.GetXaxis().SetBinLabel(1,"0-450")
+    d_mass_3jet.GetXaxis().SetBinLabel(2,"450-450")
+    d_mass_3jet.GetXaxis().SetBinLabel(3,"above 550")
+    
+c22=TCanvas("c22","c22",800,600)
+c22.cd()
+c22.SetGrid()
+c22.SetBorderSize( 12 )
+d_mass_3jet.Draw("*")
+
+#D versus Xf
+
+d_mass_xf=TH1F("d_mass_xf"," D versus Xf ",len(par_xf),0,len(par_xf)) 
+d_mass_xf.GetXaxis().SetTitle("Xf")
+d_mass_xf.GetYaxis().SetTitle("D parameter")
+
+for i in range(0 , len(par_xf)):
+    d_mass_xf.SetBinContent(i+1 , par_xf[i])
+    d_mass_xf.SetBinError(i+1, par_error_xf[i])
+    #d_mass_3jet.GetXaxis().SetBinLabel(1,"Total")
+    d_mass_xf.GetXaxis().SetBinLabel(1,"Xf < 0.03")
+    d_mass_xf.GetXaxis().SetBinLabel(2,"0.03 <= Xf <= 0.1")
+    d_mass_xf.GetXaxis().SetBinLabel(3,"Xf > 0.1")
+    
+c28=TCanvas("c28","c28",800,600)
+c28.cd()
+c28.SetGrid()
+c28.SetBorderSize( 12 )
+d_mass_xf.Draw("*")
+
+#D versus invmass (cut & uncut)
+
+c40=TCanvas("c40","c40",800,600)
+#c40.cd()
+c40.SetGrid()
+c40.SetBorderSize( 12 )
+
+mg = TMultiGraph()
+
+d_mass_uncut_1=TGraph() 
+d_mass_uncut_1.SetTitle("Without cuts")
+d_mass_uncut_1.SetMarkerStyle(21)
+d_mass_uncut_1.SetLineColor(2)
+d_mass_uncut_1.SetLineWidth(2)
+d_mass_uncut_1.SetFillStyle(0)
+
+
+d_mass_cut_1 = TGraph()
+d_mass_cut_1.SetMarkerStyle(23)
+d_mass_cut_1.SetTitle("With cuts in Xf, jets , and cos theta *")
+d_mass_cut_1.SetLineColor(4)
+d_mass_cut_1.SetLineWidth(2)
+d_mass_cut_1.SetFillStyle(0)
+
+d_mass_cut_xf = TGraph()
+d_mass_cut_xf.SetMarkerStyle(22)
+d_mass_cut_xf.SetTitle("With cuts in Xf")
+d_mass_cut_xf.SetLineColor(8)
+d_mass_cut_xf.SetLineWidth(2)
+d_mass_cut_xf.SetFillStyle(0)
+
+d_mass_cut_jet = TGraph()
+d_mass_cut_jet.SetMarkerStyle(24)
+d_mass_cut_jet.SetTitle("With cuts in jets")
+d_mass_cut_jet.SetLineColor(6)
+d_mass_cut_jet.SetLineWidth(2)
+d_mass_cut_jet.SetFillStyle(0)
+
+d_mass_cut_theta = TGraph()
+d_mass_cut_theta.SetMarkerStyle(2)
+d_mass_cut_theta.SetTitle("With cuts in cos theta *")
+d_mass_cut_theta.SetLineColor(28)
+d_mass_cut_theta.SetLineWidth(2)
+d_mass_cut_theta.SetFillStyle(0)
+
+line = TGraph()
+line.SetTitle("D minimum")
+line.SetLineWidth(2)
+line.SetFillStyle(0)
+
+
+x = 400
+for m in range(0 , len(par_d_invmass)):
+    line.SetPoint(m , x + (50*m) , -0.333)
+
+
+for i in range(0 , len(par_d_invmass)):
+    d_mass_uncut_1.SetPoint(i ,x + (50 * i) ,par_d_invmass[i] )
+
+for i in range(0 , len(par_d_invmass_2)):
+    d_mass_cut_xf.SetPoint(i ,x + (50 * i) ,par_d_invmass_2[i] )
+
+for i in range(0 , len(par_d_invmass_3)):
+    d_mass_cut_jet.SetPoint(i ,x + (50 * i) ,par_d_invmass_3[i] )
+
+
+for l in range(0, len(par_d_invmass_1)):
+    d_mass_cut_1.SetPoint(l, x + (50* l), par_d_invmass_1[l] )
+
+for l in range(0, len(par_d_invmass_4)):
+    d_mass_cut_theta.SetPoint(l, x + (50* l), par_d_invmass_4[l] )
+
+
+mg.Add(d_mass_uncut_1)
+mg.Add(d_mass_cut_1)
+mg.Add(d_mass_cut_xf)
+mg.Add(d_mass_cut_jet)
+mg.Add(d_mass_cut_theta)
+mg.Add(line)
+
+mg.SetTitle("D versus Invariant mass ;Invariant mass (GeV);D Parameter")
+
+#gPad.Modified()
+#mg.GetXaxis()
+#mg.SetLimits(400,1000)
+
+
+mg.Draw("ACP")
+c40.BuildLegend(0.5,0.26,0.9,0.48)
+
+
+########
+
+d_mass_uncut=TH1F("d_mass_uncut"," D versus invariant mass ",len(par_d_invmass),0,len(par_d_invmass)) 
+d_mass_uncut.GetXaxis().SetTitle("Invariant mass")
+d_mass_uncut.GetYaxis().SetTitle("D parameter")
+
+for i in range(0 , len(par_d_invmass)):
+    d_mass_uncut.SetBinContent(i+1 , par_d_invmass[i])
+    d_mass_uncut.SetBinError(i+1, par_error_d_invmass[i])
+    
+    
+c41=TCanvas("c41","c41",800,600)
+c41.cd()
+c41.SetGrid()
+c41.SetBorderSize( 12 )
+d_mass_uncut.Draw("*")
+
+#with cuts 
+
+d_mass_cut=TH1F("d_mass_cut"," D versus invariant mass ",len(par_d_invmass_1),0,len(par_d_invmass_1)) 
+d_mass_cut.GetXaxis().SetTitle("Invariant mass")
+d_mass_cut.GetYaxis().SetTitle("D parameter")
+
+for i in range(0 , len(par_d_invmass_1)):
+    d_mass_cut.SetBinContent(i+1 , par_d_invmass_1[i])
+    d_mass_cut.SetBinError(i+1, par_error_d_invmass_1[i])
+    
+    
+c50=TCanvas("c50","c50",800,600)
+c50.cd()
+c50.SetGrid()
+c50.SetBorderSize( 12 )
+d_mass_cut.Draw("*")
+#d_mass_uncut.Draw("same")
+
+
+##SAVE THE CANVAS
+c1.SaveAs(h_lep_top_pt.GetName()+".png")
+c2.SaveAs(h_lep_top_eta.GetName()+".png")
+c3.SaveAs(h_lep_top_phi.GetName()+".png")
+c4.SaveAs(h_lep_top_e.GetName()+".png")
+#c5.SaveAs(h_bjet_invmass.GetName()+".png")
+#c8.SaveAs(h_nu_invmass.GetName()+".png")
+#c6.SaveAs(h_dilepton_mass.GetName()+".png")
+
+c7.SaveAs(h_total_invmass.GetName()+".png")
+#c9.SaveAs(h_diff_cos_phi.GetName()+".png")
+c10.SaveAs(h_top_invmass.GetName()+".png")
+c11.SaveAs(h_antitop_invmass.GetName()+".png")
+c12.SaveAs(top_antitop_invmass.GetName()+".png")
+#c13.SaveAs(h_cos_phi.GetName()+".png")        
+#c14.SaveAs(h_cos_phi_450.GetName()+".png") 
+#c15.SaveAs(h_cos_phi_550.GetName()+".png")
+#c17.SaveAs(h_cos_phi_above550.GetName()+".png")
+#c18.SaveAs(h_jet1.GetName()+".png")  
+c16.SaveAs(d_mass.GetName()+".png") 
+c21.SaveAs(d_bjet.GetName()+".png") 
+#c22.SaveAs(d_mass_3jet.GetName()+".png") 
+#c25.SaveAs(h_cos_phi_above550_3jet.GetName()+".png")
+c26.SaveAs(X_f.GetName()+".png") 
+c27.SaveAs(cos_theta.GetName()+".png") 
+c28.SaveAs(d_mass_xf.GetName()+".png") 
+#c29.SaveAs(X_f_03.GetName()+".png") 
+#c30.SaveAs(X_f_1.GetName()+".png") 
+#c32.SaveAs(X_f_above1.GetName()+".png") 
+#c40.SaveAs(d_mass_uncut_1.GetName()+".png") 
+#c41.SaveAs(d_mass_uncut.GetName()+".png") 
+#c50.SaveAs(d_mass_cut.GetName()+".png") 
+#c488.SaveAs(d_950_1.GetName()+".png") 
+
+
+
